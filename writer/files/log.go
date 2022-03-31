@@ -108,7 +108,7 @@ type fileout struct {
 
     currTime time.Time
 
-    matchName string
+    match string
     
 	w *bufio.Writer
 
@@ -120,7 +120,7 @@ type fileout struct {
     // avoid duplicate files
     generation int
     // handler age and log file
-    millCh chan string
+    oldStuff chan string
     
     startMill sync.Once
 }
@@ -215,11 +215,11 @@ func (d *fileout) getWriter(b []byte) (io.Writer, error) {
     
     if forceNewFile {
         d.startMill.Do(func() {
-            d.millCh = make(chan string, 1)
-            go d.millRun()
+            d.oldStuff = make(chan string, 1)
+            go d.rotaRun()
         })
         select {
-        case d.millCh <- d.opt.gtr:
+        case d.oldStuff <- d.match:
         case <-time.After(time.Millisecond * 10):
         }
         // Prevent duplicate filenames after restart
@@ -249,17 +249,17 @@ func (d *fileout) getWriter(b []byte) (io.Writer, error) {
     return d.w, nil
 }
 
-// millRun runs in a goroutine to manage post-rotation compression and removal
+// rotaRun runs in a goroutine to manage post-rotation compression and removal
 // of old log files.
-func (d *fileout) millRun() {
-    for pdir := range d.millCh {
-        _ = d.millRunOnce(pdir)
+func (d *fileout) rotaRun() {
+    for stdff := range d.oldStuff {
+        _ = d.olderYouth(stdff)
     }
 }
 
-// millRunOnce
-func (d *fileout) millRunOnce(projectdir string) error {
-    files, err := d.oldLogFiles(projectdir)
+// olderYouth
+func (d *fileout) olderYouth(stdff string) error {
+    files, err := d.oldLogFiles(stdff)
     if err != nil {
         return err
     }
@@ -275,8 +275,8 @@ func (d *fileout) millRunOnce(projectdir string) error {
     return nil
 }
 // oldLogFiles
-func (d *fileout) oldLogFiles(projectdir string) ([]fs.FileInfo, error) {
-    files, err := ioutil.ReadDir(projectdir)
+func (d *fileout) oldLogFiles(stdff string) ([]fs.FileInfo, error) {
+    files, err := ioutil.ReadDir(stdff)
     if err != nil {
         return nil, fmt.Errorf("can't read log file directory: %s", err)
     }
