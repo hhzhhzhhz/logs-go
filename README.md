@@ -16,7 +16,7 @@
 go get -u https://github.com/hhzhhzhhz/logs-go
 ```
 
-#Benchmarks
+##Benchmarks
 ```text
 output file
 logs-go    	   768952	      1547 ns/op	     461 B/op	       7 allocs/op
