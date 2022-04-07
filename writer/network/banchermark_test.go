@@ -6,9 +6,8 @@ import (
 	"testing"
 )
 
-
 func init_() {
-	listen, err := net.Listen( "tcp", tcp_port)
+	listen, err := net.Listen("tcp", tcp_port)
 	if err != nil {
 		panic(err)
 	}

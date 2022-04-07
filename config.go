@@ -46,11 +46,11 @@ func writerRsyslog(cfg Config) (zapcore.WriteSyncer, error) {
 	}
 	opts = append(opts, network.WithAddr(cfg.WriteRsyslog.Addr))
 	if cfg.WriteRsyslog.NetworkTimeout > 0 {
-		opts = append(opts, network.WithNetWorkTimeout(time.Duration(cfg.WriteRsyslog.NetworkTimeout) * time.Second))
+		opts = append(opts, network.WithNetWorkTimeout(time.Duration(cfg.WriteRsyslog.NetworkTimeout)*time.Second))
 	}
 	opts = append(opts, network.WithLevle(network.Priority(cfg.Level.Level())))
 	// rsyslog specification
-	prefix := fmt.Sprintf("<%d>", network.LOG_LOCAL0 + network.Priority(cfg.Level.Level()))
+	prefix := fmt.Sprintf("<%d>", network.LOG_LOCAL0+network.Priority(cfg.Level.Level()))
 	opts = append(opts, network.WithCoder(network.NewRsyslogCoder(prefix)))
 	sw := network.NewNetout(opts...)
 	return sw, nil
@@ -94,10 +94,10 @@ type Config struct {
 
 func NewDefaultConfig() Config {
 	return Config{
-		Level:       zap.NewAtomicLevel(),
-		Development: false,
-		EncoderConfig:    NewProductionEncoderConfig(),
-		errorOut: stdout.NewStdout(0),
+		Level:         zap.NewAtomicLevel(),
+		Development:   false,
+		EncoderConfig: NewProductionEncoderConfig(),
+		errorOut:      stdout.NewStdout(0),
 	}
 }
 
@@ -113,11 +113,11 @@ func (c Config) Build() (logger.Logger, error) {
 	for _, wfn := range writersFn {
 		wr, err := wfn(c)
 		if err != nil {
-			return nil,  err
+			return nil, err
 		}
 		if wr != nil {
 			writers = append(writers, wr)
-			if close, ok := wr.(interface {Close() error}); ok {
+			if close, ok := wr.(interface{ Close() error }); ok {
 				closes = append(closes, close)
 			}
 		}
@@ -166,8 +166,8 @@ func (c Config) buildOptions() []zap.Option {
 type WriteFileout struct {
 	// file rule
 	GenerateRule string `json:"generate_rule"`
-	BufsizeMb int `json:"bufsize_mb"`
-	MaxSizeMb int `json:"max_size_mb"`
+	BufsizeMb    int    `json:"bufsize_mb"`
+	MaxSizeMb    int    `json:"max_size_mb"`
 	// day
 	MaxAge int `json:"max_age"`
 	// second
@@ -180,7 +180,6 @@ type WriteRsyslog struct {
 	// address
 	Addr string `json:"addr"`
 }
-
 
 // NewProductionEncoderConfig returns an opinionated EncoderConfig for
 // production environments.

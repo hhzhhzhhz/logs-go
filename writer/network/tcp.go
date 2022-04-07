@@ -9,21 +9,21 @@ var megebyte = 1024 * 1024
 
 func NewTcplog(opt *options) Network {
 	r := &tcplog{
-		addr: opt.addr,
+		addr:    opt.addr,
 		bufSize: opt.bufsize,
-		coder: opt.coder,
+		coder:   opt.coder,
 	}
 	r.connect()
 	return r
 }
 
 type tcplog struct {
-	addr string
+	addr    string
 	bufSize int
-	w *bufio.Writer
-	c net.Conn
-	coder Coder
-	err error
+	w       *bufio.Writer
+	c       net.Conn
+	coder   Coder
+	err     error
 }
 
 func (r *tcplog) Write(b []byte) (int, error) {
@@ -43,6 +43,7 @@ func (r *tcplog) Write(b []byte) (int, error) {
 	}
 	return n, err
 }
+
 // bufsize
 func (r *tcplog) bufsize() int {
 	if r.bufSize <= 0 {
@@ -83,4 +84,3 @@ func (n *tcplog) ClearBuffer() error {
 	}
 	return nil
 }
-

@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	listen, err := net.Listen( "tcp", tcp_port)
+	listen, err := net.Listen("tcp", tcp_port)
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +31,7 @@ func init() {
 }
 
 func handler(c net.Conn) {
-	buf := make([]byte, 1024 * 1024 * 4)
+	buf := make([]byte, 1024*1024*4)
 	for {
 		c.Read(buf)
 		//if err != nil {
@@ -39,7 +39,6 @@ func handler(c net.Conn) {
 		//}
 	}
 }
-
 
 func Test_Netout(t *testing.T) {
 	c := NewNetout(WithAddr(tcp_port))

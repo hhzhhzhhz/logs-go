@@ -3,6 +3,7 @@ package fileout
 import (
 	"bufio"
 	"fmt"
+	"go.uber.org/multierr"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -215,16 +216,23 @@ func (d *fileout) Close() error {
 
 // close
 func (d *fileout) close() error {
-	var err error
+	var errs error
 	if d.w != nil {
-		d.w.Flush()
+		if err := d.w.Flush(); err != nil {
+			errs = multierr.Append(errs, err)
+		}
 	}
 	if d.fr != nil {
-		err = d.fr.Close()
-		d.renameFile(d.fr.Name())
+		if err := d.fr.Close(); err != nil {
+			errs = multierr.Append(errs, err)
+		}
+
+		if err := d.renameFile(d.fr.Name()); err != nil {
+			errs = multierr.Append(errs, err)
+		}
 	}
 
-	return err
+	return errs
 }
 
 // getWriter
@@ -251,7 +259,7 @@ func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
 		}
 		forceNewFile = true
 	}
-
+	var errs error
 	if forceNewFile {
 		if gentime {
 			d.currTime = time.Now()
@@ -277,17 +285,20 @@ func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
 			d.generation++
 		}
 		if !createFile {
-			d.close()
+			if err := d.close(); err != nil {
+				errs = multierr.Append(errs, err)
+			}
 			d.size = 0
 			d.fr = nil
-			return d.w, nil
+			return d.w, errs
 		}
-
+		if err := d.close(); err != nil {
+			errs = multierr.Append(errs, err)
+		}
 		nf, err := d.createFile(filename)
 		if err != nil {
-			return nil, err
+			return nil, multierr.Append(errs, err)
 		}
-		d.close()
 		if d.w != nil {
 			d.w.Reset(nf)
 		} else {
@@ -296,7 +307,7 @@ func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
 		d.size = 0
 		d.fr = nf
 	}
-	return d.w, nil
+	return d.w, errs
 }
 
 // olderStduffRun runs in a goroutine to manage post-rotation compression and removal
@@ -305,9 +316,9 @@ func (d *fileout) stduffRun() {
 	tick := time.Tick(d.rotationTime())
 	for {
 		select {
-		case stduff := <- d.oldStuff:
+		case stduff := <-d.oldStuff:
 			_ = d.stduffHandler(stduff)
-		case <- tick:
+		case <-tick:
 			if len(d.oldStuff) == 0 {
 				d.mu.Lock()
 				d.getWriter(nil, false)
@@ -386,13 +397,18 @@ func (d *fileout) rename(old string) string {
 func (d *fileout) Write(b []byte) (n int, err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	var errs error
 	w, err := d.getWriter(b, true)
-	if err != nil {
-		return 0, fmt.Errorf("failed to acquite target io.Writer, cause: %s", err.Error())
+	errs = multierr.Append(errs, err)
+	if err != nil && w == nil {
+		return 0, fmt.Errorf("failed to acquite target io.Writer, cause: %s", errs.Error())
 	}
 	n, err = w.Write(b)
+	if err != nil {
+		errs = multierr.Append(errs, err)
+	}
 	d.size += int64(n)
-	return n, err
+	return n, errs
 }
 
 // CreateFile creates a new file in the given path, creating parent directories

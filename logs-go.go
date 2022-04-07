@@ -19,7 +19,6 @@ type log struct {
 	closes []io.Closer
 }
 
-
 func (l *log) Info(msg string, fields ...zap.Field) {
 	l.logger.Info(msg, fields...)
 }
@@ -47,7 +46,7 @@ func (l *log) Fatal(msg string, fields ...zap.Field) {
 func (l *log) Close() error {
 	var errs error
 	for _, c := range l.closes {
-		fn, ok := c.(interface {Close() error})
+		fn, ok := c.(interface{ Close() error })
 		if ok {
 			if err := fn.Close(); err != nil {
 				errs = multierr.Append(errs, err)
@@ -60,4 +59,3 @@ func (l *log) Close() error {
 func (l *log) Sync() error {
 	return l.logger.Core().Sync()
 }
-

@@ -1,6 +1,8 @@
 package fileout
 
 import (
+	"fmt"
+	"go.uber.org/multierr"
 	"path/filepath"
 	"testing"
 	"time"
@@ -59,4 +61,14 @@ func Test_Rang_Dir(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(list)
+}
+
+func Test_errors(t *testing.T) {
+	var errs error
+	errs = multierr.Append(errs, fmt.Errorf("xxx"))
+	errs = multierr.Append(errs, fmt.Errorf("xxx1"))
+	errs = multierr.Append(errs, fmt.Errorf("xxx2"))
+	errs = multierr.Append(errs, fmt.Errorf("xxx3"))
+	t.Log(errs.Error())
+
 }

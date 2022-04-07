@@ -30,12 +30,14 @@ func WithAddr(addr string) Option {
 		o.addr = addr
 	}
 }
+
 // WithLevle
 func WithLevle(level Priority) Option {
 	return func(o *options) {
 		o.level = level
 	}
 }
+
 // WithBufsizeMb
 func WithBufsizeMb(bufsize int) Option {
 	return func(o *options) {
@@ -55,18 +57,18 @@ type options struct {
 	//writeTimeoutmill time.Duration
 	// network timeout
 	netTimeout time.Duration
-	addr string
-	bufsize int
-	level Priority
-	coder Coder
+	addr       string
+	bufsize    int
+	level      Priority
+	coder      Coder
 }
 
 type netout struct {
 	ctx    context.Context
 	cancle context.CancelFunc
 	opt    *options
-	ch  chan []byte
-	out Network
+	ch     chan []byte
+	out    Network
 	// Prevent async tasks from not exiting
 	stop chan struct{}
 	// Prevent asynchronous Ctrip data loss
@@ -84,9 +86,9 @@ func NewNetout(opts ...Option) *netout {
 		ctx:    ctx,
 		cancle: cancle,
 		ch:     make(chan []byte, 1024),
-		opt: opt,
-		out: NewTcplog(opt),
-		stop: make(chan struct{}, 1),
+		opt:    opt,
+		out:    NewTcplog(opt),
+		stop:   make(chan struct{}, 1),
 	}
 	go net.running()
 	return net

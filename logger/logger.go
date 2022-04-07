@@ -14,4 +14,3 @@ type Logger interface {
 	Panic(msg string, fields ...zap.Field)
 	Fatal(msg string, fields ...zap.Field)
 }
-
