@@ -6,12 +6,16 @@ import (
 	"go.uber.org/zap/zapcore"
 	"io"
 	"logs-go/formatime"
-	"logs-go/logger"
 	fileout "logs-go/writer/files"
 	"logs-go/writer/network"
 	"logs-go/writer/stdout"
 	"sort"
 	"time"
+)
+
+const (
+	simpleformat = "simple"
+	jsonformat   = "json"
 )
 
 type writer func(c Config) (zapcore.WriteSyncer, error)
@@ -65,6 +69,9 @@ func writerStdout(cfg Config) (zapcore.WriteSyncer, error) {
 }
 
 type Config struct {
+	// json simple
+	Format string `json:"format"`
+
 	WriteFileout WriteFileout `json:"write_fileout"`
 
 	WriteRsyslog WriteRsyslog `json:"write_rsyslog"`
@@ -72,7 +79,7 @@ type Config struct {
 	Stdout bool `json:"stdout"`
 	// level
 	Level zap.AtomicLevel `json:"level" yaml:"level"`
-	// Development puts the log in development mode, which changes the
+	// Development puts the jlog in development mode, which changes the
 	// behavior of DPanicLevel and takes stacktraces more liberally.
 	Development bool `json:"development" yaml:"development"`
 	// DisableCaller stops annotating logs with the calling function's file
@@ -88,20 +95,24 @@ type Config struct {
 	// OutputPaths is a list of URLs or file paths to write logging output to.
 	// See Open for details.
 	errorOut zapcore.WriteSyncer
-	// InitialFields is a collection of fields to add to the root log.
+	// InitialFields is a collection of fields to add to the root jlog.
 	InitialFields map[string]interface{} `json:"initialFields" yaml:"initialFields"`
 }
 
-func NewDefaultConfig() Config {
+func NewJsonConfig() Config {
 	return Config{
 		Level:         zap.NewAtomicLevel(),
 		Development:   false,
 		EncoderConfig: NewProductionEncoderConfig(),
 		errorOut:      stdout.NewStdout(0),
+		Format:        jsonformat,
 	}
 }
 
-func (c Config) Build() (logger.Logger, error) {
+func (c Config) BuildJsonLog() (LogJson, error) {
+	if c.Format != jsonformat {
+		return nil, fmt.Errorf("require %s output format bug %s", jsonformat, c.Format)
+	}
 	var writers []zapcore.WriteSyncer
 	var core zapcore.Core
 	var closes []io.Closer
@@ -123,7 +134,40 @@ func (c Config) Build() (logger.Logger, error) {
 		}
 	}
 	core = zapcore.NewCore(enc, zapcore.NewMultiWriteSyncer(writers...), c.Level)
-	return NewLogger(zap.New(core, c.buildOptions()...), closes), nil
+	return NewLogJson(zap.New(core, c.buildOptions()...), closes), nil
+}
+
+func NewSimpleConfig() Config {
+	return Config{
+		Level:    zap.NewAtomicLevel(),
+		errorOut: stdout.NewStdout(0),
+		Format:   simpleformat,
+	}
+}
+
+func (c Config) BuildSimpleLog() (LogSimple, error) {
+	if c.Format != simpleformat {
+		return nil, fmt.Errorf("require %s output format bug %s", simpleformat, c.Format)
+	}
+	var writers []zapcore.WriteSyncer
+	var closes []io.Closer
+	if c.Level == (zap.AtomicLevel{}) {
+		return nil, fmt.Errorf("missing Level")
+	}
+
+	for _, wfn := range writersFn {
+		wr, err := wfn(c)
+		if err != nil {
+			return nil, err
+		}
+		if wr != nil {
+			writers = append(writers, wr)
+			if close, ok := wr.(interface{ Close() error }); ok {
+				closes = append(closes, close)
+			}
+		}
+	}
+	return NewLogSimple(zapcore.NewMultiWriteSyncer(writers...), closes, c.Level.Level(), c.errorOut), nil
 }
 
 func (c Config) buildOptions() []zap.Option {

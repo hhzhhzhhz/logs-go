@@ -1,12 +1,13 @@
-# LGOS-GO
-
-logs-go is based on uber zap package, which can quickly write to the file system and connect to rsyslog.
+# LOGS-GO
+    logs-go is a log component packaged based on uber-go and log library 
+    support output console file and rsyslog.
 
 ## Features
 
 * [Blazing fast](#benchmarks)
-* Support file output according to regular format
-* Support for rsyslog output
+* Support output to rsyslog/file/sdout 
+* Support json format
+* Support custom format
 * graceful shutdown
 
 ## Installation
@@ -16,10 +17,11 @@ go get -u https://github.com/hhzhhzhhz/logs-go
 ```
 
 #Benchmarks
-See ..logs-go\log-go_test.go
 ```text
-BenchmarkForFile-12    	  874861	      1358 ns/op	     373 B/op	       6 allocs/op
-BenchmarkOneForFile-12    	  422335	      2414 ns/op	     370 B/op	       6 allocs/op
+output file
+logs-go    	   768952	      1547 ns/op	     461 B/op	       7 allocs/op
+lumberjack    	   307975	      3960 ns/op	     344 B/op	       4 allocs/op
+rotatelogs    	   31593	     37487 ns/op	     802 B/op	       9 allocs/op
 ```
 ## Getting Started
 
@@ -28,6 +30,19 @@ BenchmarkOneForFile-12    	  422335	      2414 ns/op	     370 B/op	       6 allo
 For simple logging, output rsyslog
 
 ```go
+t.Run("rsyslog", func(t *testing.T) {
+    cfg := logs_go.NewSimpleConfig()
+    cfg.WriteRsyslog.Addr = "127.0.0.1:65532"
+    cfg.Stdout = true
+    l, err := cfg.BuildSimpleLog()
+    if err != nil {
+        t.Error(err)
+    }
+    l.Info("Test_log_rsyslog", "rsyslog")
+    l.Close()
+})
+output: 2022/04/07 23:32:39 log_example_test.go:68: [INFO] Test_log_rsyslog
+
 func Test_log_rsyslog(t *testing.T) {
 	fileds := map[string]interface{}{}
 	fileds["@rsyslog_tag"] = "rsyslog_tag"
@@ -47,6 +62,19 @@ output: {"level":"info","timestamp":"2022-04-07T00:10:30.953+08:00","caller":"lo
 
 For simple logging, output files
 ```go
+t.Run("file", func(t *testing.T) {
+    cfg := logs_go.NewSimpleConfig()
+    cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+    cfg.Stdout = true
+    l, err := cfg.BuildSimpleLog()
+    if err != nil { 
+        t.Error(err)
+    }
+    l.Info("Test_log_file %s", "file")
+    l.Close()
+})
+output: 2022/04/07 23:34:14 log_example_test.go:57: [INFO] Test_log_file file
+
 func Test_log_file(t *testing.T) {
 	cfg := logs_go.NewDefaultConfig()
 	cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
@@ -63,6 +91,18 @@ output: {"level":"info","timestamp":"2022-04-07T00:15:24.368+08:00","caller":"lo
 
 For simple logging, output stdout
 ```go
+t.Run("stdout", func(t *testing.T) {
+    cfg := logs_go.NewSimpleConfig()
+    cfg.Stdout = true
+    l, err := cfg.BuildSimpleLog()
+    if err != nil {
+        t.Error(err)
+    }
+    l.Info("Test_logs_stdout %s", "stdout")
+    l.Close()
+})
+output: 2022/04/07 23:29:57 log_example_test.go:78: [INFO] Test_logs_stdout stdout
+
 func Test_logs_stdout(t *testing.T) {
 	cfg := logs_go.NewDefaultConfig()
 	cfg.Stdout = true
