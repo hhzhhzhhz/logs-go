@@ -11,7 +11,7 @@ const (
 
 // NewStdout
 func NewStdout(bufsizemb int) *Stdout {
-	buf := 0
+	buf := 512
 	if bufsizemb > 0 {
 		buf = bufsizemb * megabyte
 	}
