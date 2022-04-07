@@ -1,5 +1,5 @@
 # LOGS-GO
-    logs-go is a log component packaged based on uber-go and log library 
+    logs-go is a log component based on uber-go and native log 
     support output console file and rsyslog.
 
 ## Features
