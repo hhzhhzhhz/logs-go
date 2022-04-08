@@ -3,9 +3,9 @@ package fileout
 import (
 	"fmt"
 	"go.uber.org/multierr"
+	"logs-go/utils"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 func Test_Split(t *testing.T) {
@@ -36,8 +36,8 @@ func Test_Split(t *testing.T) {
 }
 
 func Test_log(t *testing.T) {
-	t.Skip()
-	l, err := NewFileout("./log/%Y/log-%H")
+	//t.Skip()
+	l, err := NewFileout("log-")
 	if err != nil {
 		t.Error(err)
 	}
@@ -45,7 +45,7 @@ func Test_log(t *testing.T) {
 		if _, err := l.Write([]byte("hello world!\n")); err != nil {
 			t.Error(err)
 		}
-		time.Sleep(500 * time.Millisecond)
+		//time.Sleep(500 * time.Millisecond)
 	}
 	l.Close()
 }
@@ -61,6 +61,13 @@ func Test_Rang_Dir(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(list)
+}
+
+func Test_compressLogFile(t *testing.T) {
+	//t.Skip()
+	if err := utils.GzipFile("log-.7", "log-.7.gz"); err != nil {
+		t.Error(err.Error())
+	}
 }
 
 func Test_errors(t *testing.T) {

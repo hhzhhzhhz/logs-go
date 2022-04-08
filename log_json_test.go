@@ -32,6 +32,7 @@ func BenchmarkForFile(b *testing.B) {
 	cfg := NewJsonConfig()
 	cfg.WriteFileout.GenerateRule = "./%Y/jlog"
 	cfg.InitialFields = fileds
+	cfg.WriteFileout.Compress = true
 	log, err := cfg.BuildJsonLog()
 	if err != nil {
 		b.Error(err)
@@ -51,6 +52,7 @@ func BenchmarkOneForFile(b *testing.B) {
 	fileds := map[string]interface{}{}
 	fileds["@rsyslog_tag"] = "service_id"
 	cfg := NewJsonConfig()
+	cfg.WriteFileout.Compress = false
 	cfg.WriteFileout.GenerateRule = "./%Y/log"
 	cfg.InitialFields = fileds
 	log, err := cfg.BuildJsonLog()

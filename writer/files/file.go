@@ -23,6 +23,7 @@ const (
 	defaultBufSize = 4
 	randnum        = 10
 	templog        = ".tmp"
+	compressSuffix = ".gz"
 )
 
 var (
@@ -88,10 +89,10 @@ func WithRotationTime(t time.Duration) Option {
 	}
 }
 
-// WithStuffunc
-func WithStuffunc(t time.Duration) Option {
+// WithCompression
+func WithCompression(open bool) Option {
 	return func(o *Options) {
-		o.rotationTime = t
+		o.compression = open
 	}
 }
 
@@ -108,8 +109,8 @@ type Options struct {
 	rotationTime time.Duration
 	// requriedTimezone
 	requriedTimezone bool
-	// handler stuff files
-	stuffunc func(fullPathName string)
+	// compression
+	compression bool
 }
 
 func NewFileout(name string, opts ...Option) (*fileout, error) {
@@ -153,9 +154,17 @@ type fileout struct {
 	// avoid duplicate files
 	generation int
 	// handler age and log file
-	oldStuff chan string
+	oldStuff chan *Event
+
+	sw sync.WaitGroup
 
 	startMill sync.Once
+}
+
+type Event struct {
+	// tp =0-> handler oldfiles >0 -> gzip/rename
+	tp  int
+	msg string
 }
 
 func (l *fileout) test() int {
@@ -226,11 +235,13 @@ func (d *fileout) close() error {
 		if err := d.fr.Close(); err != nil {
 			errs = multierr.Append(errs, err)
 		}
-
-		if err := d.renameFile(d.fr.Name()); err != nil {
-			errs = multierr.Append(errs, err)
+		select {
+		case d.oldStuff <- &Event{tp: 1, msg: d.fr.Name()}:
+			d.sw.Add(1)
+		case <-time.After(time.Millisecond * 10):
 		}
 	}
+	d.sw.Wait()
 
 	return errs
 }
@@ -265,11 +276,12 @@ func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
 			d.currTime = time.Now()
 		}
 		d.startMill.Do(func() {
-			d.oldStuff = make(chan string, 1)
+			d.oldStuff = make(chan *Event, 5)
 			go d.stduffRun()
 		})
 		select {
-		case d.oldStuff <- d.match:
+		case d.oldStuff <- &Event{tp: 0, msg: d.match}:
+			d.sw.Add(1)
 		case <-time.After(time.Millisecond * 10):
 		}
 		// Prevent duplicate filenames after restart
@@ -318,6 +330,7 @@ func (d *fileout) stduffRun() {
 		select {
 		case stduff := <-d.oldStuff:
 			_ = d.stduffHandler(stduff)
+			d.sw.Done()
 		case <-tick:
 			if len(d.oldStuff) == 0 {
 				d.mu.Lock()
@@ -329,8 +342,15 @@ func (d *fileout) stduffRun() {
 }
 
 // stduffHandler rename/remove/callback old files
-func (d *fileout) stduffHandler(stduff string) error {
-	matches, err := filepath.Glob(stduff)
+func (d *fileout) stduffHandler(stduff *Event) error {
+	if stduff.tp > 0 {
+		if d.opt.compression {
+			gzName := d.rename(d.fr.Name()) + compressSuffix
+			return utils.GzipFile(d.fr.Name(), gzName)
+		}
+		return d.renameFile(d.fr.Name())
+	}
+	matches, err := filepath.Glob(stduff.msg)
 	if err != nil {
 		return err
 	}
@@ -344,12 +364,14 @@ func (d *fileout) stduffHandler(stduff string) error {
 			continue
 		}
 		if strings.HasSuffix(fullName, templog) {
-			if d.currTime.Sub(f.ModTime()) >= d.rotationTime()*2 || (f.Size()+2048) > d.maxSize() {
-				return d.renameFile(f.Name())
+			if d.currTime.Sub(f.ModTime()) >= time.Duration(float64(d.rotationTime()) * 0.1) {
+				if d.opt.compression {
+					cpname := d.rename(fullName) + compressSuffix
+					return utils.GzipFile(fullName, cpname)
+				} else {
+					d.renameFile(f.Name())
+				}
 			}
-		}
-		if d.opt.stuffunc != nil {
-			d.opt.stuffunc(fullName)
 		}
 	}
 	return nil

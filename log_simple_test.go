@@ -44,6 +44,7 @@ func Test_simple_rsyslog(t *testing.T) {
 func BenchmarkForSimpleFile(b *testing.B) {
 	cfg := NewSimpleConfig()
 	cfg.WriteFileout.GenerateRule = "./%Y/simple_log"
+	cfg.WriteFileout.Compress = true
 	log, err := cfg.BuildSimpleLog()
 	if err != nil {
 		b.Error(err)

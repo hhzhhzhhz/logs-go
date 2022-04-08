@@ -48,6 +48,7 @@ func Test_simple_stdout(t *testing.T) {
 	t.Run("file", func(t *testing.T) {
 		cfg := logs_go.NewSimpleConfig()
 		cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+		cfg.WriteFileout.Compress = false
 		cfg.Stdout = true
 		l, err := cfg.BuildSimpleLog()
 		if err != nil {

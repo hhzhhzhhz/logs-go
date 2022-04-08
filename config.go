@@ -36,6 +36,7 @@ func writerFileout(cfg Config) (zapcore.WriteSyncer, error) {
 	opts = append(opts, fileout.WithMaxAge(cfg.WriteFileout.MaxAge))
 	opts = append(opts, fileout.WithBufSize(cfg.WriteFileout.BufsizeMb))
 	opts = append(opts, fileout.WithRotationTime(time.Duration(cfg.WriteFileout.RotationTime)))
+	opts = append(opts, fileout.WithCompression(cfg.WriteFileout.Compress))
 	fw, err := fileout.NewFileout(cfg.WriteFileout.GenerateRule, opts...)
 	if err != nil {
 		return nil, err
@@ -215,7 +216,8 @@ type WriteFileout struct {
 	// day
 	MaxAge int `json:"max_age"`
 	// second
-	RotationTime int `json:"rotation_time"`
+	RotationTime int  `json:"rotation_time"`
+	Compress     bool `json:"compress"`
 }
 
 type WriteRsyslog struct {
