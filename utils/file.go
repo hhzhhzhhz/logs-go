@@ -66,7 +66,6 @@ func GzipFile(src, dst string) (err error) {
 	defer func() {
 		if err != nil {
 			os.Remove(dst)
-			fmt.Println(src, dst)
 			err = fmt.Errorf("failed to compress log file: %v", err)
 		}
 	}()
