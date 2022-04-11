@@ -2,13 +2,13 @@ package logs_go
 
 import (
 	"fmt"
+	"github.com/hhzhhzhhz/logs-go/formatime"
+	fileout "github.com/hhzhhzhhz/logs-go/writer/files"
+	"github.com/hhzhhzhhz/logs-go/writer/network"
+	"github.com/hhzhhzhhz/logs-go/writer/stdout"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io"
-	"logs-go/formatime"
-	fileout "logs-go/writer/files"
-	"logs-go/writer/network"
-	"logs-go/writer/stdout"
 	"sort"
 	"time"
 )

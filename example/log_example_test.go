@@ -1,8 +1,8 @@
 package example
 
 import (
+	logs_go "github.com/hhzhhzhhz/logs-go"
 	"go.uber.org/zap"
-	logs_go "logs-go"
 	"testing"
 )
 

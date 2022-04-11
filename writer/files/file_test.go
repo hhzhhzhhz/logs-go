@@ -2,8 +2,8 @@ package fileout
 
 import (
 	"fmt"
+	"github.com/hhzhhzhhz/logs-go/utils"
 	"go.uber.org/multierr"
-	"logs-go/utils"
 	"path/filepath"
 	"testing"
 )

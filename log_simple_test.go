@@ -1,6 +1,8 @@
 package logs_go
 
 import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"testing"
 )
 
@@ -63,7 +65,9 @@ func BenchmarkForSimpleFile(b *testing.B) {
 func BenchmarkOneForSimpleFile(b *testing.B) {
 	cfg := NewSimpleConfig()
 	cfg.WriteFileout.GenerateRule = "./%Y/simple_log"
+	cfg.Stdout = true
 	log, err := cfg.BuildSimpleLog()
+
 	if err != nil {
 		b.Error(err)
 	}
@@ -71,7 +75,55 @@ func BenchmarkOneForSimpleFile(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		log.Info("The quick brown fox jumps over the lazy dog")
+		log.Error("The quick brown fox jumps over the lazy dog")
 	}
 	log.Close()
+}
+
+func Test_Level(t *testing.T) {
+	t.Run("debug", func(t *testing.T) {
+		cfg := NewSimpleConfig()
+		cfg.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
+		cfg.Stdout = true
+		log, err := cfg.BuildSimpleLog()
+
+		if err != nil {
+			t.Error(err)
+		}
+		log.Debug("debug")
+		log.Error("error")
+		log.Info("info")
+		log.Close()
+	})
+
+	t.Run("info", func(t *testing.T) {
+		cfg := NewSimpleConfig()
+		cfg.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+		cfg.Stdout = true
+		log, err := cfg.BuildSimpleLog()
+
+		if err != nil {
+			t.Error(err)
+		}
+		log.Debug("debug")
+		log.Error("error")
+		log.Info("info")
+		log.Close()
+	})
+
+	t.Run("error", func(t *testing.T) {
+		cfg := NewSimpleConfig()
+		cfg.Level = zap.NewAtomicLevelAt(zapcore.ErrorLevel)
+		cfg.Stdout = true
+		log, err := cfg.BuildSimpleLog()
+
+		if err != nil {
+			t.Error(err)
+		}
+		log.Debug("debug")
+		log.Error("error")
+		log.Info("info")
+		log.Close()
+	})
+
 }

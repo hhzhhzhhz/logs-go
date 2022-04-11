@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"logs-go/strftime"
+	"github.com/hhzhhzhhz/logs-go/strftime"
 	"testing"
 	"time"
 )

@@ -3,8 +3,8 @@ package utils
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/hhzhhzhhz/logs-go/strftime"
 	"io"
-	"logs-go/strftime"
 	"os"
 	"strconv"
 	"time"

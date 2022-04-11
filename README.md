@@ -46,11 +46,11 @@ output: 2022/04/07 23:32:39 log_example_test.go:68: [INFO] Test_log_rsyslog
 func Test_log_rsyslog(t *testing.T) {
 	fileds := map[string]interface{}{}
 	fileds["@rsyslog_tag"] = "rsyslog_tag"
-	cfg := logs_go.NewDefaultConfig()
+	cfg := logs_go.NewJsonConfig()
 	cfg.InitialFields = fileds
 	cfg.WriteRsyslog.Addr = "127.0.0.1:65532"
 	cfg.Stdout = true
-	l, err := cfg.Build()
+	l, err := cfg.BuildJsonLog()
 	if err != nil {
 		t.Error(err)
 	}
@@ -76,10 +76,10 @@ t.Run("file", func(t *testing.T) {
 output: 2022/04/07 23:34:14 log_example_test.go:57: [INFO] Test_log_file file
 
 func Test_log_file(t *testing.T) {
-	cfg := logs_go.NewDefaultConfig()
+	cfg := logs_go.NewJsonConfig()
 	cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
 	cfg.Stdout = true
-	l, err := cfg.Build()
+	l, err := cfg.BuildJsonLog()
 	if err != nil {
 		t.Error(err)
 	}
@@ -104,9 +104,9 @@ t.Run("stdout", func(t *testing.T) {
 output: 2022/04/07 23:29:57 log_example_test.go:78: [INFO] Test_logs_stdout stdout
 
 func Test_logs_stdout(t *testing.T) {
-	cfg := logs_go.NewDefaultConfig()
+	cfg := logs_go.NewJsonConfig()
 	cfg.Stdout = true
-	l, err := cfg.Build()
+	l, err := cfg.BuildJsonLog()
 	if err != nil {
 		t.Error(err)
 	}
