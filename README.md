@@ -13,7 +13,7 @@
 ## Installation
 
 ```bash
-go get -u https://github.com/hhzhhzhhz/logs-go
+go get -u github.com/hhzhhzhhz/logs-go
 ```
 
 ## Benchmarks
