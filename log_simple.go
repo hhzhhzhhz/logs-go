@@ -20,12 +20,16 @@ type LogSimple interface {
 	Fatal(format string, v ...interface{})
 }
 
-func NewLogSimple(w io.Writer, cs []io.Closer, level zapcore.Level, errout io.Writer) LogSimple {
+func NewLogSimple(w io.Writer, cs []io.Closer, level zapcore.Level, errout io.Writer, calldepth int) LogSimple {
 	l := log.New(w, "", log.Ldate|log.Ltime|log.Lshortfile)
+	if calldepth < 2 {
+		calldepth = 2
+	}
 	return &logSimple{
 		l:      l,
 		closes: cs,
 		level:  level,
+		calldepth: calldepth,
 	}
 }
 
@@ -34,11 +38,12 @@ type logSimple struct {
 	closes   []io.Closer
 	level    zapcore.Level
 	errorOut io.Writer
+	calldepth int
 }
 
 func (a *logSimple) Debug(format string, v ...interface{}) {
 	if a.level <= zapcore.DebugLevel {
-		if err := a.l.Output(2, fmt.Sprintf("[DEBUG] "+format+"\n", v...)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[DEBUG] "+format+"\n", v...)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}
@@ -48,7 +53,7 @@ func (a *logSimple) Debug(format string, v ...interface{}) {
 
 func (a *logSimple) Info(format string, v ...interface{}) {
 	if a.level <= zapcore.InfoLevel {
-		if err := a.l.Output(2, fmt.Sprintf("[INFO] "+format+"\n", v...)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[INFO] "+format+"\n", v...)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}
@@ -58,7 +63,7 @@ func (a *logSimple) Info(format string, v ...interface{}) {
 
 func (a *logSimple) Warn(format string, v ...interface{}) {
 	if a.level <= zapcore.WarnLevel {
-		if err := a.l.Output(2, fmt.Sprintf("[WARN] "+format+"\n", v)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[WARN] "+format+"\n", v)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}
@@ -68,7 +73,7 @@ func (a *logSimple) Warn(format string, v ...interface{}) {
 
 func (a *logSimple) Error(format string, v ...interface{}) {
 	if a.level <= zapcore.ErrorLevel {
-		if err := a.l.Output(2, fmt.Sprintf("[ERROR] "+format+"\n", v...)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[ERROR] "+format+"\n", v...)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}
@@ -78,7 +83,7 @@ func (a *logSimple) Error(format string, v ...interface{}) {
 
 func (a *logSimple) DPanic(format string, v ...interface{}) {
 	if a.level <= zapcore.DPanicLevel {
-		if err := a.l.Output(2, fmt.Sprintf("[DPANIC] "+format+"\n", v...)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[DPANIC] "+format+"\n", v...)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}
@@ -88,7 +93,7 @@ func (a *logSimple) DPanic(format string, v ...interface{}) {
 
 func (a *logSimple) Panic(format string, v ...interface{}) {
 	if a.level <= zapcore.PanicLevel {
-		if err := a.l.Output(2, fmt.Sprintf("[FATAL] "+format+"\n", v...)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[FATAL] "+format+"\n", v...)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}
@@ -98,7 +103,7 @@ func (a *logSimple) Panic(format string, v ...interface{}) {
 
 func (a *logSimple) Fatal(format string, v ...interface{}) {
 	if a.level <= zapcore.FatalLevel {
-		if err := a.l.Output(2, fmt.Sprintf("[FATAL] "+format+"\n", v...)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[FATAL] "+format+"\n", v...)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}

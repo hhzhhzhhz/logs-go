@@ -77,6 +77,8 @@ type Config struct {
 
 	WriteRsyslog WriteRsyslog `json:"write_rsyslog"`
 
+	Calldepth int `json:"calldepth"`
+
 	Stdout bool `json:"stdout"`
 	// level
 	Level zap.AtomicLevel `json:"level" yaml:"level"`
@@ -168,7 +170,7 @@ func (c Config) BuildSimpleLog() (LogSimple, error) {
 			}
 		}
 	}
-	return NewLogSimple(zapcore.NewMultiWriteSyncer(writers...), closes, c.Level.Level(), c.errorOut), nil
+	return NewLogSimple(zapcore.NewMultiWriteSyncer(writers...), closes, c.Level.Level(), c.errorOut, c.Calldepth), nil
 }
 
 func (c Config) buildOptions() []zap.Option {
