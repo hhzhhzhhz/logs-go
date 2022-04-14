@@ -427,7 +427,7 @@ func (d *fileout) Write(b []byte) (n int, err error) {
 	}
 	n, err = w.Write(b)
 	if err != nil {
-		errs = multierr.Append(errs, err)
+		return 0, multierr.Append(errs, err)
 	}
 	d.size += int64(n)
 	return n, errs
