@@ -68,12 +68,15 @@ func (l *logj) DPanic(msg string, fields ...zap.Field) {
 func (l *logj) Panic(msg string, fields ...zap.Field) {
 	l.logger.Panic(msg, fields...)
 }
+
 func (l *logj) Fatal(msg string, fields ...zap.Field) {
 	l.logger.Fatal(msg, fields...)
 }
+
 func (l *logj) Sync() error {
 	return l.logger.Core().Sync()
 }
+
 func (l *logj) Close() error {
 	var errs error
 	for _, c := range l.closes {
@@ -86,6 +89,7 @@ func (l *logj) Close() error {
 	}
 	return errs
 }
+
 func NewLogf(w io.Writer, cs []io.Closer, level zapcore.Level, errout io.Writer, calldepth int) Logf {
 	l := log.New(w, "", log.Ldate|log.Ltime|log.Lshortfile)
 	if calldepth < 2 {
@@ -116,6 +120,7 @@ func (a *logf) Debug(format string, v ...interface{}) {
 		}
 	}
 }
+
 func (a *logf) Info(format string, v ...interface{}) {
 	if a.level <= zapcore.InfoLevel {
 		if err := a.l.Output(a.calldepth, fmt.Sprintf("[INFO] "+format+"\n", v...)); err != nil {
@@ -146,6 +151,7 @@ func (a *logf) Error(format string, v ...interface{}) {
 		}
 	}
 }
+
 func (a *logf) DPanic(format string, v ...interface{}) {
 	if a.level <= zapcore.DPanicLevel {
 		if err := a.l.Output(a.calldepth, fmt.Sprintf("[DPANIC] "+format+"\n", v...)); err != nil {
