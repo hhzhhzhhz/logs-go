@@ -1,4 +1,4 @@
-package utils
+package writer
 
 import (
 	"compress/gzip"

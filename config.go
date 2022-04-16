@@ -2,10 +2,8 @@ package logs_go
 
 import (
 	"fmt"
-	"github.com/hhzhhzhhz/logs-go/formatime"
-	fileout "github.com/hhzhhzhhz/logs-go/writer/files"
+	std "github.com/hhzhhzhhz/logs-go/writer"
 	"github.com/hhzhhzhhz/logs-go/writer/network"
-	"github.com/hhzhhzhhz/logs-go/writer/stdout"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io"
@@ -14,8 +12,8 @@ import (
 )
 
 const (
-	simpleformat = "simple"
-	jsonformat   = "json"
+	format = "fromat"
+	json   = "json"
 )
 
 type writer func(c Config) (zapcore.WriteSyncer, error)
@@ -27,17 +25,17 @@ var writersFn = []writer{
 }
 
 func writerFileout(cfg Config) (zapcore.WriteSyncer, error) {
-	var opts []fileout.Option
+	var opts []std.Option
 	if cfg.WriteFileout.GenerateRule == "" {
 		return nil, nil
 	}
-	opts = append(opts, fileout.WithGenerationRule(cfg.WriteFileout.GenerateRule))
-	opts = append(opts, fileout.WithMaxSize(cfg.WriteFileout.MaxSizeMb))
-	opts = append(opts, fileout.WithMaxAge(cfg.WriteFileout.MaxAge))
-	opts = append(opts, fileout.WithBufSize(cfg.WriteFileout.BufsizeMb))
-	opts = append(opts, fileout.WithRotationTime(time.Duration(cfg.WriteFileout.RotationTime)))
-	opts = append(opts, fileout.WithCompression(cfg.WriteFileout.Compress))
-	fw, err := fileout.NewFileout(cfg.WriteFileout.GenerateRule, opts...)
+	opts = append(opts, std.WithGenerationRule(cfg.WriteFileout.GenerateRule))
+	opts = append(opts, std.WithMaxSize(cfg.WriteFileout.MaxSizeMb))
+	opts = append(opts, std.WithMaxAge(cfg.WriteFileout.MaxAge))
+	opts = append(opts, std.WithBufSize(cfg.WriteFileout.BufsizeMb))
+	opts = append(opts, std.WithRotationTime(time.Duration(cfg.WriteFileout.RotationTime)))
+	opts = append(opts, std.WithCompression(cfg.WriteFileout.Compress))
+	fw, err := std.NewFileout(cfg.WriteFileout.GenerateRule, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +61,14 @@ func writerRsyslog(cfg Config) (zapcore.WriteSyncer, error) {
 
 func writerStdout(cfg Config) (zapcore.WriteSyncer, error) {
 	if cfg.Stdout {
-		return stdout.NewStdout(0), nil
+		return std.NewStdout(0), nil
 	}
 	return nil, nil
 
 }
 
 type Config struct {
-	// json simple
+	// json or format
 	Format string `json:"format"`
 
 	WriteFileout WriteFileout `json:"write_fileout"`
@@ -82,7 +80,7 @@ type Config struct {
 	Stdout bool `json:"stdout"`
 	// level
 	Level zap.AtomicLevel `json:"level" yaml:"level"`
-	// Development puts the jlog in development mode, which changes the
+	// Development puts the logj in development mode, which changes the
 	// behavior of DPanicLevel and takes stacktraces more liberally.
 	Development bool `json:"development" yaml:"development"`
 	// DisableCaller stops annotating logs with the calling function's file
@@ -98,23 +96,23 @@ type Config struct {
 	// OutputPaths is a list of URLs or file paths to write logging output to.
 	// See Open for details.
 	errorOut zapcore.WriteSyncer
-	// InitialFields is a collection of fields to add to the root jlog.
+	// InitialFields is a collection of fields to add to the root logj.
 	InitialFields map[string]interface{} `json:"initialFields" yaml:"initialFields"`
 }
 
-func NewJsonConfig() Config {
+func NewLogJconfig() Config {
 	return Config{
 		Level:         zap.NewAtomicLevel(),
 		Development:   false,
 		EncoderConfig: NewProductionEncoderConfig(),
-		errorOut:      stdout.NewStdout(0),
-		Format:        jsonformat,
+		errorOut:      std.NewStdout(0),
+		Format:        json,
 	}
 }
 
-func (c Config) BuildJsonLog() (LogJson, error) {
-	if c.Format != jsonformat {
-		return nil, fmt.Errorf("require %s output format bug %s", jsonformat, c.Format)
+func (c Config) BuildLogJ() (LogJ, error) {
+	if c.Format != json {
+		return nil, fmt.Errorf("require %s output format bug %s", json, c.Format)
 	}
 	var writers []zapcore.WriteSyncer
 	var core zapcore.Core
@@ -137,20 +135,20 @@ func (c Config) BuildJsonLog() (LogJson, error) {
 		}
 	}
 	core = zapcore.NewCore(enc, zapcore.NewMultiWriteSyncer(writers...), c.Level)
-	return NewLogJson(zap.New(core, c.buildOptions()...), closes), nil
+	return NewLogJ(zap.New(core, c.buildOptions()...), closes), nil
 }
 
-func NewSimpleConfig() Config {
+func NewLogfConfig() Config {
 	return Config{
 		Level:    zap.NewAtomicLevel(),
-		errorOut: stdout.NewStdout(0),
-		Format:   simpleformat,
+		errorOut: std.NewStdout(0),
+		Format:   format,
 	}
 }
 
-func (c Config) BuildSimpleLog() (LogSimple, error) {
-	if c.Format != simpleformat {
-		return nil, fmt.Errorf("require %s output format bug %s", simpleformat, c.Format)
+func (c Config) BuildLogf() (Logf, error) {
+	if c.Format != format {
+		return nil, fmt.Errorf("require %s output format bug %s", format, c.Format)
 	}
 	var writers []zapcore.WriteSyncer
 	var closes []io.Closer
@@ -170,14 +168,14 @@ func (c Config) BuildSimpleLog() (LogSimple, error) {
 			}
 		}
 	}
-	return NewLogSimple(zapcore.NewMultiWriteSyncer(writers...), closes, c.Level.Level(), c.errorOut, c.Calldepth), nil
+	return NewLogf(zapcore.NewMultiWriteSyncer(writers...), closes, c.Level.Level(), c.errorOut, c.Calldepth), nil
 }
 
 func (c Config) buildOptions() []zap.Option {
 	var opts []zap.Option
 
 	if c.errorOut == nil {
-		opts = append(opts, zap.ErrorOutput(stdout.NewStdout(0)))
+		opts = append(opts, zap.ErrorOutput(std.NewStdout(0)))
 	}
 
 	if c.Development {
@@ -229,6 +227,13 @@ type WriteRsyslog struct {
 	Addr string `json:"addr"`
 }
 
+var RFC3339MS = "2006-01-02T15:04:05.000Z07:00"
+
+// out -> 2022-04-06T23:17:31.385+08:00
+func RFC3339TimeEncoderKibana(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format(RFC3339MS))
+}
+
 // NewProductionEncoderConfig returns an opinionated EncoderConfig for
 // production environments.
 func NewProductionEncoderConfig() zapcore.EncoderConfig {
@@ -240,7 +245,7 @@ func NewProductionEncoderConfig() zapcore.EncoderConfig {
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     formatime.RFC3339TimeEncoderKibana,
+		EncodeTime:     RFC3339TimeEncoderKibana,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}

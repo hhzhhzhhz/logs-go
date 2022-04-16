@@ -4,13 +4,23 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 )
 
 var (
-	tcp_port = ":9876"
+	tcp_port = ":65532"
 )
 
-func init() {
+func handler(c net.Conn) {
+	buf := make([]byte, 1024*1024*4)
+	for {
+		c.Read(buf)
+		//if err != nil {
+		//	panic(err)
+		//}
+	}
+}
+func Test_TcpService(t *testing.T) {
 	listen, err := net.Listen("tcp", tcp_port)
 	if err != nil {
 		panic(err)
@@ -27,17 +37,7 @@ func init() {
 		}
 		listen.Close()
 	}()
-
-}
-
-func handler(c net.Conn) {
-	buf := make([]byte, 1024*1024*4)
-	for {
-		c.Read(buf)
-		//if err != nil {
-		//	panic(err)
-		//}
-	}
+	time.Sleep(100 * time.Second)
 }
 
 func Test_Netout(t *testing.T) {

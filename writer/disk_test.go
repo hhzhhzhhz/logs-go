@@ -1,8 +1,7 @@
-package fileout
+package writer
 
 import (
 	"fmt"
-	"github.com/hhzhhzhhz/logs-go/utils"
 	"go.uber.org/multierr"
 	"path/filepath"
 	"testing"
@@ -64,8 +63,8 @@ func Test_Rang_Dir(t *testing.T) {
 }
 
 func Test_compressLogFile(t *testing.T) {
-	//t.Skip()
-	if err := utils.GzipFile("log-.7", "log-.7.gz"); err != nil {
+	t.Skip()
+	if err := GzipFile("log-.7", "log-.7.gz"); err != nil {
 		t.Error(err.Error())
 	}
 }

@@ -5,7 +5,7 @@
 ## Features
 
 * [Blazing fast](#benchmarks)
-* Support output to rsyslog/file/sdout 
+* Support to rsyslog/file/sdout 
 * Support json format
 * Support custom format
 * graceful shutdown
@@ -25,94 +25,93 @@ rotatelogs    	   31593	     37487 ns/op	     802 B/op	       9 allocs/op
 ```
 ## Getting Started
 
-### Simple Logging Example
+### format Logging Example
 
 For simple logging, output rsyslog
 
 ```go
 t.Run("rsyslog", func(t *testing.T) {
-    cfg := logs_go.NewSimpleConfig()
+    cfg := NewLogfConfig()
     cfg.WriteRsyslog.Addr = "127.0.0.1:65532"
     cfg.Stdout = true
-    l, err := cfg.BuildSimpleLog()
+    l, err := cfg.BuildLogf()
     if err != nil {
         t.Error(err)
     }
-    l.Info("Test_log_rsyslog", "rsyslog")
+    l.Info("rsyslog %s", "rsyslog")
     l.Close()
 })
-output: 2022/04/07 23:32:39 log_example_test.go:68: [INFO] Test_log_rsyslog
+// output: 2022/04/16 14:31:37 log_test.go:185: [INFO] rsyslog rsyslog
 
-func Test_log_rsyslog(t *testing.T) {
-	fileds := map[string]interface{}{}
-	fileds["@rsyslog_tag"] = "rsyslog_tag"
-	cfg := logs_go.NewJsonConfig()
-	cfg.InitialFields = fileds
-	cfg.WriteRsyslog.Addr = "127.0.0.1:65532"
-	cfg.Stdout = true
-	l, err := cfg.BuildJsonLog()
-	if err != nil {
-		t.Error(err)
-	}
-	l.Info("Test_log_rsyslog", zap.String("out", "rsyslog"))
-	l.Close()
-}
-output: {"level":"info","timestamp":"2022-04-07T00:10:30.953+08:00","caller":"logs-go/logs-go.go:24","tag":"Test_log_rsyslog","@rsyslog_tag":"rsyslog_tag","out":"rsyslog"}
-```
-
-For simple logging, output files
-```go
-t.Run("file", func(t *testing.T) {
-    cfg := logs_go.NewSimpleConfig()
-    cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+t.Run("rsyslog", func(t *testing.T) {
+    fileds := map[string]interface{}{}
+    fileds["@rsyslog_tag"] = "rsyslog_tag"
+    cfg := NewLogJconfig()
+    cfg.InitialFields = fileds
+    cfg.WriteRsyslog.Addr = "127.0.0.1:65532"
     cfg.Stdout = true
-    l, err := cfg.BuildSimpleLog()
-    if err != nil { 
+    l, err := cfg.BuildLogJ()
+    if err != nil {
         t.Error(err)
     }
-    l.Info("Test_log_file %s", "file")
+    l.Info("rsyslog", zap.String("out", "rsyslog"))
     l.Close()
 })
-output: 2022/04/07 23:34:14 log_example_test.go:57: [INFO] Test_log_file file
+// output: {"level":"info","timestamp":"2022-04-16T14:31:57.338+08:00","caller":"logs-go/log.go:49","tag":"rsyslog","@rsyslog_tag":"rsyslog_tag","out":"rsyslog"}
+```
 
-func Test_log_file(t *testing.T) {
-	cfg := logs_go.NewJsonConfig()
-	cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
-	cfg.Stdout = true
-	l, err := cfg.BuildJsonLog()
-	if err != nil {
-		t.Error(err)
-	}
-	l.Info("Test_log_file", zap.String("out", "file"))
-	l.Close()
-}
-output: {"level":"info","timestamp":"2022-04-07T00:15:24.368+08:00","caller":"logs-go/logs-go.go:24","tag":"Test_log_file","out":"file"}
+For simple logging, output disk
+```go
+t.Run("disk", func(t *testing.T) {
+    cfg := NewLogfConfig()
+    cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+    cfg.Stdout = true
+    l, err := cfg.BuildLogf()
+    if err != nil {
+        t.Error(err)
+    }
+    l.Info("disk %s", "file")
+    l.Close()
+})
+// 2022/04/16 14:28:23 log_test.go:215: [INFO] disk file
+
+t.Run("disk", func(t *testing.T) {
+    cfg := NewLogJconfig()
+    cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+    cfg.Stdout = true
+    l, err := cfg.BuildLogJ()
+        if err != nil {
+    t.Error(err)
+    }
+    l.Info("disk", zap.String("out", "file"))
+    l.Close()
+})
+// output: {"level":"info","timestamp":"2022-04-16T14:28:34.688+08:00","caller":"logs-go/log.go:49","tag":"disk","out":"file"}
 ```
 
 For simple logging, output stdout
 ```go
 t.Run("stdout", func(t *testing.T) {
-    cfg := logs_go.NewSimpleConfig()
+    cfg := NewLogfConfig()
     cfg.Stdout = true
-    l, err := cfg.BuildSimpleLog()
+    l, err := cfg.BuildLogf()
     if err != nil {
         t.Error(err)
     }
-    l.Info("Test_logs_stdout %s", "stdout")
+    l.Info("stdout %s", "stdout")
     l.Close()
 })
-output: 2022/04/07 23:29:57 log_example_test.go:78: [INFO] Test_logs_stdout stdout
+// output: 2022/04/16 14:26:33 log_test.go:240: [INFO] stdout stdout
 
-func Test_logs_stdout(t *testing.T) {
-	cfg := logs_go.NewJsonConfig()
-	cfg.Stdout = true
-	l, err := cfg.BuildJsonLog()
-	if err != nil {
-		t.Error(err)
-	}
-	l.Info("Test_logs_stdout", zap.String("out", "stdout"))
+t.Run("stdout", func(t *testing.T) {
+    cfg := NewLogJconfig()
+    cfg.Stdout = true
+    l, err := cfg.BuildLogJ()
+    if err != nil {
+        t.Error(err)
+    }
+    l.Info("stdout", zap.String("out", "stdout"))
 	l.Close()
-}
-stdout: {"level":"info","timestamp":"2022-04-07T00:15:53.759+08:00","caller":"logs-go/logs-go.go:24","tag":"Test_logs_stdout","out":"stdout"}
+})
+// output: {"level":"info","timestamp":"2022-04-16T14:26:53.911+08:00","caller":"logs-go/log.go:49","tag":"stdout","out":"stdout"}
 ```
-In this case, many consumers will take the last value, but this is not guaranteed; check yours if in doubt.

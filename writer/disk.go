@@ -1,10 +1,9 @@
-package fileout
+package writer
 
 import (
 	"bufio"
 	"fmt"
 	"github.com/hhzhhzhhz/logs-go/strftime"
-	"github.com/hhzhhzhhz/logs-go/utils"
 	"go.uber.org/multierr"
 	"io"
 	"io/fs"
@@ -256,7 +255,7 @@ func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
 	if rotationtime > 0 {
 		gentime = false
 		d.currTime = time.Now()
-		filename = utils.GenRolaFileName(d.strf, d.currTime, rotationtime, d.generation, d.opt.requriedTimezone, templog)
+		filename = GenRolaFileName(d.strf, d.currTime, rotationtime, d.generation, d.opt.requriedTimezone, templog)
 	}
 
 	writeLen := int64(len(b))
@@ -289,7 +288,7 @@ func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
 			d.generation = globalRand.Intn(randnum)
 		}
 		for {
-			filename = utils.GenRolaFileName(d.strf, d.currTime, rotationtime, d.generation, d.opt.requriedTimezone, templog)
+			filename = GenRolaFileName(d.strf, d.currTime, rotationtime, d.generation, d.opt.requriedTimezone, templog)
 			_, err := os_Stat(d.rename(filename))
 			if err != nil {
 				break
@@ -346,7 +345,7 @@ func (d *fileout) stduffHandler(stduff *Event) error {
 	if stduff.tp > 0 {
 		if d.opt.compression {
 			gzName := d.rename(d.fr.Name()) + compressSuffix
-			return utils.GzipFile(d.fr.Name(), gzName)
+			return GzipFile(d.fr.Name(), gzName)
 		}
 		return d.renameFile(d.fr.Name())
 	}
@@ -364,10 +363,10 @@ func (d *fileout) stduffHandler(stduff *Event) error {
 			continue
 		}
 		if strings.HasSuffix(fullName, templog) {
-			if d.currTime.Sub(f.ModTime()) >= time.Duration(float64(d.rotationTime()) * 0.1) {
+			if d.currTime.Sub(f.ModTime()) >= time.Duration(float64(d.rotationTime())*0.1) {
 				if d.opt.compression {
 					cpname := d.rename(fullName) + compressSuffix
-					return utils.GzipFile(fullName, cpname)
+					return GzipFile(fullName, cpname)
 				} else {
 					d.renameFile(f.Name())
 				}

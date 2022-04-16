@@ -1,12 +1,8 @@
-package stdout
+package writer
 
 import (
 	"bufio"
 	"os"
-)
-
-const (
-	megabyte = 1024 * 1024
 )
 
 // NewStdout
@@ -38,7 +34,7 @@ func (s *Stdout) Sync() error {
 
 func (s *Stdout) Close() error {
 	if s.w != nil {
-		s.w.Flush()
+		return s.w.Flush()
 	}
-	return s.fr.Close()
+	return nil
 }
