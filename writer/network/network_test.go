@@ -40,8 +40,8 @@ func Test_TcpService(t *testing.T) {
 	time.Sleep(100 * time.Second)
 }
 
-func Test_Netout(t *testing.T) {
-	c := NewNetout(WithAddr(tcp_port))
+func Test_NetWork(t *testing.T) {
+	c := NewNetwork(WithAddr(tcp_port))
 	if _, err := c.Write([]byte("hello world !!!")); err != nil {
 		t.Error(err.Error())
 	}

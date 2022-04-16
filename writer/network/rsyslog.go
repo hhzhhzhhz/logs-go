@@ -7,7 +7,10 @@ import (
 type Priority int
 
 const (
-	// https://github.com/rsyslog/rsyslog/blob/master/runtime/rsyslog.h
+	// Facility.
+
+	// From /usr/include/sys/syslog.h.
+	// These are the same up to LOG_FTP on Linux, BSD, and OS X.
 	LOG_KERN Priority = iota << 3
 	LOG_USER
 	LOG_MAIL
@@ -26,6 +29,12 @@ const (
 	_ // unused
 	LOG_LOCAL0
 	LOG_LOCAL1
+	LOG_LOCAL2
+	LOG_LOCAL3
+	LOG_LOCAL4
+	LOG_LOCAL5
+	LOG_LOCAL6
+	LOG_LOCAL7
 )
 
 func NewRsyslogCoder(prefix string) *RsyslogCoder {

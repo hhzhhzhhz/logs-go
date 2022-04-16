@@ -36,12 +36,12 @@ func Test_Logf(t *testing.T) {
 		if err != nil {
 			t.Log(err.Error())
 		}
-		l.Info("The quick brown fox jumps over the lazy dog %s", "fileout")
+		l.Info("The quick brown fox jumps over the lazy dog %s", "stdout")
 		l.Close()
 	})
 	t.Run("disk", func(t *testing.T) {
 		cfg := NewLogfConfig()
-		cfg.WriteFileout.GenerateRule = "./%Y/logf"
+		cfg.WriteDisk.GenerateRule = "./%Y/logf"
 		l, err := cfg.BuildLogf()
 		if err != nil {
 			t.Log(err.Error())
@@ -139,7 +139,7 @@ func Test_Readme(t *testing.T) {
 
 	t.Run("disk", func(t *testing.T) {
 		cfg := NewLogfConfig()
-		cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+		cfg.WriteDisk.GenerateRule = "./%Y-%d-%m/%H-log"
 		cfg.Stdout = true
 		l, err := cfg.BuildLogf()
 		if err != nil {
@@ -152,7 +152,7 @@ func Test_Readme(t *testing.T) {
 
 	t.Run("disk", func(t *testing.T) {
 		cfg := NewLogJconfig()
-		cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+		cfg.WriteDisk.GenerateRule = "./%Y-%d-%m/%H-log"
 		cfg.Stdout = true
 		l, err := cfg.BuildLogJ()
 		if err != nil {

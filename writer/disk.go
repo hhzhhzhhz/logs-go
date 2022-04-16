@@ -112,7 +112,7 @@ type Options struct {
 	compression bool
 }
 
-func NewFileout(name string, opts ...Option) (*fileout, error) {
+func NeWriteDisk(name string, opts ...Option) (*writeDisk, error) {
 	o := &Options{}
 	for _, opt := range opts {
 		opt(o)
@@ -127,14 +127,14 @@ func NewFileout(name string, opts ...Option) (*fileout, error) {
 		match = re.ReplaceAllString(match, "*") + "*"
 	}
 
-	return &fileout{
+	return &writeDisk{
 		opt:   o,
 		strf:  strf,
 		match: match,
 	}, nil
 }
 
-type fileout struct {
+type writeDisk struct {
 	opt *Options
 
 	strf *strftime.Strftime
@@ -166,12 +166,8 @@ type Event struct {
 	msg string
 }
 
-func (l *fileout) test() int {
-	return l.opt.maxSize
-}
-
 // maxSize returns the maximum size in bytes of log files
-func (l *fileout) maxSize() int64 {
+func (l *writeDisk) maxSize() int64 {
 	if l.opt.maxSize <= 0 {
 		return int64(defaultMaxSize * megabyte)
 	}
@@ -179,7 +175,7 @@ func (l *fileout) maxSize() int64 {
 }
 
 // bufsize
-func (l *fileout) bufsize() int {
+func (l *writeDisk) bufsize() int {
 	if l.opt.bufSize < 0 {
 		return 1024
 	}
@@ -190,7 +186,7 @@ func (l *fileout) bufsize() int {
 }
 
 // rotationTime
-func (l *fileout) rotationTime() time.Duration {
+func (l *writeDisk) rotationTime() time.Duration {
 	if l.opt.rotationTime < 0 {
 		return 0
 	}
@@ -201,7 +197,7 @@ func (l *fileout) rotationTime() time.Duration {
 }
 
 // maxAge
-func (l *fileout) maxAge() time.Duration {
+func (l *writeDisk) maxAge() time.Duration {
 	if l.opt.maxAge > 0 {
 		return time.Duration(l.opt.maxAge) * 24 * time.Hour
 	}
@@ -209,21 +205,21 @@ func (l *fileout) maxAge() time.Duration {
 }
 
 // Sync
-func (d *fileout) Sync() error {
+func (d *writeDisk) Sync() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.w.Flush()
 }
 
 // Close
-func (d *fileout) Close() error {
+func (d *writeDisk) Close() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.close()
 }
 
 // close
-func (d *fileout) close() error {
+func (d *writeDisk) close() error {
 	var errs error
 	if d.w != nil {
 		if err := d.w.Flush(); err != nil {
@@ -246,7 +242,7 @@ func (d *fileout) close() error {
 }
 
 // getWriter
-func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
+func (d *writeDisk) getWriter(b []byte, createFile bool) (io.Writer, error) {
 	var filename string
 	var gentime bool
 
@@ -323,7 +319,7 @@ func (d *fileout) getWriter(b []byte, createFile bool) (io.Writer, error) {
 
 // olderStduffRun runs in a goroutine to manage post-rotation compression and removal
 // of old log files.
-func (d *fileout) stduffRun() {
+func (d *writeDisk) stduffRun() {
 	tick := time.Tick(d.rotationTime())
 	for {
 		select {
@@ -341,7 +337,7 @@ func (d *fileout) stduffRun() {
 }
 
 // stduffHandler rename/remove/callback old files
-func (d *fileout) stduffHandler(stduff *Event) error {
+func (d *writeDisk) stduffHandler(stduff *Event) error {
 	if stduff.tp > 0 {
 		if d.opt.compression {
 			gzName := d.rename(d.fr.Name()) + compressSuffix
@@ -377,7 +373,7 @@ func (d *fileout) stduffHandler(stduff *Event) error {
 }
 
 // oldLogFiles
-func (d *fileout) oldLogFiles(stdff string) ([]fs.FileInfo, error) {
+func (d *writeDisk) oldLogFiles(stdff string) ([]fs.FileInfo, error) {
 	files, err := ioutil.ReadDir(stdff)
 	if err != nil {
 		return nil, fmt.Errorf("can't read log file directory: %s", err)
@@ -386,7 +382,7 @@ func (d *fileout) oldLogFiles(stdff string) ([]fs.FileInfo, error) {
 }
 
 // renameFile
-func (d *fileout) renameFile(fullName string) error {
+func (d *writeDisk) renameFile(fullName string) error {
 	if na := d.rename(fullName); na != "" {
 		return os.Rename(fullName, na)
 	}
@@ -394,7 +390,7 @@ func (d *fileout) renameFile(fullName string) error {
 }
 
 // rename
-func (d *fileout) rename(old string) string {
+func (d *writeDisk) rename(old string) string {
 	var name string
 	filenames := strings.Split(old, templog)
 	lenth := len(filenames)
@@ -415,7 +411,7 @@ func (d *fileout) rename(old string) string {
 }
 
 // Write
-func (d *fileout) Write(b []byte) (n int, err error) {
+func (d *writeDisk) Write(b []byte) (n int, err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	var errs error
@@ -433,7 +429,7 @@ func (d *fileout) Write(b []byte) (n int, err error) {
 }
 
 // CreateFile creates a new file in the given path, creating parent directories
-func (d *fileout) createFile(filename string) (*os.File, error) {
+func (d *writeDisk) createFile(filename string) (*os.File, error) {
 	dirname := filepath.Dir(filename)
 	if err := os.MkdirAll(dirname, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create directory %s", dirname)
@@ -446,7 +442,7 @@ func (d *fileout) createFile(filename string) (*os.File, error) {
 	return fh, nil
 }
 
-func (d *fileout) RuningInfo() map[string]interface{} {
+func (d *writeDisk) RuningInfo() map[string]interface{} {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	runing := make(map[string]interface{}, 0)

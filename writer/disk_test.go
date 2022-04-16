@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Split(t *testing.T) {
-	l, err := NewFileout("log")
+	l, err := NeWriteDisk("log")
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,7 +36,7 @@ func Test_Split(t *testing.T) {
 
 func Test_log(t *testing.T) {
 	//t.Skip()
-	l, err := NewFileout("log-")
+	l, err := NeWriteDisk("log-")
 	if err != nil {
 		t.Error(err)
 	}
@@ -51,7 +51,7 @@ func Test_log(t *testing.T) {
 
 func Test_Rang_Dir(t *testing.T) {
 	t.Skip()
-	l, err := NewFileout("./log/%Y/log-%H")
+	l, err := NeWriteDisk("./log/%Y/log-%H")
 	if err != nil {
 		t.Error(err)
 	}

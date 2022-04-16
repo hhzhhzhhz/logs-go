@@ -19,23 +19,24 @@ const (
 type writer func(c Config) (zapcore.WriteSyncer, error)
 
 var writersFn = []writer{
-	writerFileout,
+	writedisk,
 	writerRsyslog,
 	writerStdout,
 }
 
-func writerFileout(cfg Config) (zapcore.WriteSyncer, error) {
+// writedisk wire to disk
+func writedisk(cfg Config) (zapcore.WriteSyncer, error) {
 	var opts []std.Option
-	if cfg.WriteFileout.GenerateRule == "" {
+	if cfg.WriteDisk.GenerateRule == "" {
 		return nil, nil
 	}
-	opts = append(opts, std.WithGenerationRule(cfg.WriteFileout.GenerateRule))
-	opts = append(opts, std.WithMaxSize(cfg.WriteFileout.MaxSizeMb))
-	opts = append(opts, std.WithMaxAge(cfg.WriteFileout.MaxAge))
-	opts = append(opts, std.WithBufSize(cfg.WriteFileout.BufsizeMb))
-	opts = append(opts, std.WithRotationTime(time.Duration(cfg.WriteFileout.RotationTime)))
-	opts = append(opts, std.WithCompression(cfg.WriteFileout.Compress))
-	fw, err := std.NewFileout(cfg.WriteFileout.GenerateRule, opts...)
+	opts = append(opts, std.WithGenerationRule(cfg.WriteDisk.GenerateRule))
+	opts = append(opts, std.WithMaxSize(cfg.WriteDisk.MaxSizeMb))
+	opts = append(opts, std.WithMaxAge(cfg.WriteDisk.MaxAge))
+	opts = append(opts, std.WithBufSize(cfg.WriteDisk.BufsizeMb))
+	opts = append(opts, std.WithRotationTime(time.Duration(cfg.WriteDisk.RotationTime)))
+	opts = append(opts, std.WithCompression(cfg.WriteDisk.Compress))
+	fw, err := std.NeWriteDisk(cfg.WriteDisk.GenerateRule, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +56,7 @@ func writerRsyslog(cfg Config) (zapcore.WriteSyncer, error) {
 	// rsyslog specification
 	prefix := fmt.Sprintf("<%d>", network.LOG_LOCAL0+network.Priority(cfg.Level.Level()))
 	opts = append(opts, network.WithCoder(network.NewRsyslogCoder(prefix)))
-	sw := network.NewNetout(opts...)
+	sw := network.NewNetwork(opts...)
 	return sw, nil
 }
 
@@ -71,11 +72,11 @@ type Config struct {
 	// json or format
 	Format string `json:"format"`
 
-	WriteFileout WriteFileout `json:"write_fileout"`
+	WriteDisk WriteDisk `json:"write_disk"`
 
 	WriteRsyslog WriteRsyslog `json:"write_rsyslog"`
 
-	Calldepth int `json:"calldepth"`
+	CallDepth int `json:"call_depth"`
 
 	Stdout bool `json:"stdout"`
 	// level
@@ -168,7 +169,7 @@ func (c Config) BuildLogf() (Logf, error) {
 			}
 		}
 	}
-	return NewLogf(zapcore.NewMultiWriteSyncer(writers...), closes, c.Level.Level(), c.errorOut, c.Calldepth), nil
+	return NewLogf(zapcore.NewMultiWriteSyncer(writers...), closes, c.Level.Level(), c.errorOut, c.CallDepth), nil
 }
 
 func (c Config) buildOptions() []zap.Option {
@@ -208,7 +209,7 @@ func (c Config) buildOptions() []zap.Option {
 	return opts
 }
 
-type WriteFileout struct {
+type WriteDisk struct {
 	// file rule
 	GenerateRule string `json:"generate_rule"`
 	BufsizeMb    int    `json:"bufsize_mb"`

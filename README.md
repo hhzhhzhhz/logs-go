@@ -64,7 +64,7 @@ For simple logging, output disk
 ```go
 t.Run("disk", func(t *testing.T) {
     cfg := NewLogfConfig()
-    cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+    cfg.WriteDisk.GenerateRule = "./%Y-%d-%m/%H-log"
     cfg.Stdout = true
     l, err := cfg.BuildLogf()
     if err != nil {
@@ -77,7 +77,7 @@ t.Run("disk", func(t *testing.T) {
 
 t.Run("disk", func(t *testing.T) {
     cfg := NewLogJconfig()
-    cfg.WriteFileout.GenerateRule = "./%Y-%d-%m/%H-log"
+    cfg.WriteDisk.GenerateRule = "./%Y-%d-%m/%H-log"
     cfg.Stdout = true
     l, err := cfg.BuildLogJ()
         if err != nil {

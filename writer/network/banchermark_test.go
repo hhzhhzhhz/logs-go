@@ -27,7 +27,7 @@ func init_() {
 }
 
 func Benchmark_max(b *testing.B) {
-	c := NewNetout(WithAddr(tcp_port))
+	c := NewNetwork(WithAddr(tcp_port))
 	for i := 0; i < b.N; i++ {
 		if _, err := c.Write([]byte("hello world !!!")); err != nil {
 			b.Error(err.Error())

@@ -9,6 +9,7 @@ var (
 	stdLogf Logf
 )
 
+// DefaultLogJ
 func DefaultLogJ() LogJ {
 	onceJ.Do(func() {
 		jcfg := NewLogJconfig()
@@ -18,6 +19,7 @@ func DefaultLogJ() LogJ {
 	return stdLogJ
 }
 
+// DefalutLogf
 func DefalutLogf() Logf {
 	oncef.Do(func() {
 		fcfg := NewLogfConfig()

@@ -7,8 +7,8 @@ func BenchmarkLogJ(b *testing.B) {
 		fileds := map[string]interface{}{}
 		fileds["@rsyslog_tag"] = "service_id"
 		cfg := NewLogJconfig()
-		cfg.WriteFileout.Compress = false
-		cfg.WriteFileout.GenerateRule = "./%Y/logj"
+		cfg.WriteDisk.Compress = false
+		cfg.WriteDisk.GenerateRule = "./%Y/logj"
 		cfg.InitialFields = fileds
 		log, err := cfg.BuildLogJ()
 		if err != nil {
@@ -27,9 +27,9 @@ func BenchmarkLogJ(b *testing.B) {
 		fileds := map[string]interface{}{}
 		fileds["@rsyslog_tag"] = "service_id"
 		cfg := NewLogJconfig()
-		cfg.WriteFileout.GenerateRule = "./%Y/logj"
+		cfg.WriteDisk.GenerateRule = "./%Y/logj"
 		cfg.InitialFields = fileds
-		cfg.WriteFileout.Compress = true
+		cfg.WriteDisk.Compress = true
 		log, err := cfg.BuildLogJ()
 		if err != nil {
 			b.Error(err)
@@ -50,8 +50,8 @@ func BenchmarkLogJ(b *testing.B) {
 func BenchmarkLogf(b *testing.B) {
 	b.Run("disk-compress", func(b *testing.B) {
 		cfg := NewLogJconfig()
-		cfg.WriteFileout.GenerateRule = "./%Y/logf"
-		cfg.WriteFileout.Compress = true
+		cfg.WriteDisk.GenerateRule = "./%Y/logf"
+		cfg.WriteDisk.Compress = true
 		log, err := cfg.BuildLogJ()
 		if err != nil {
 			b.Error(err)

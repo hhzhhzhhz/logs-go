@@ -7,7 +7,7 @@ import (
 )
 
 func Benchmark_max(b *testing.B) {
-	l, err := NewFileout("./log/%Y.log")
+	l, err := NeWriteDisk("./log/%Y.log")
 	if err != nil {
 		b.Error(err)
 	}
