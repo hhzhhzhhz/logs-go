@@ -133,7 +133,7 @@ func (a *logf) Info(format string, v ...interface{}) {
 
 func (a *logf) Warn(format string, v ...interface{}) {
 	if a.level <= zapcore.WarnLevel {
-		if err := a.l.Output(a.calldepth, fmt.Sprintf("[WARN] "+format+"\n", v)); err != nil {
+		if err := a.l.Output(a.calldepth, fmt.Sprintf("[WARN] "+format+"\n", v...)); err != nil {
 			if a.errorOut != nil {
 				a.errorOut.Write([]byte(err.Error()))
 			}
